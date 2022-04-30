@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Tilemaps;
 
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody2D body;
     private SpriteRenderer rend;
     private Animator anim;
+    private Tile rockTile;
+    private Texture2D grottoTilesTexture;
+
     public Transform groundCheck;
     public GameObject fire;
     public Transform firePosition;
@@ -17,27 +21,33 @@ public class PlayerController : MonoBehaviour
     public RawImage healthBar;
     public Texture[] healthBarTextures;
     public AudioSource gunshotSound;
+    public Tilemap pillarTilemap;
     
     private float h;
     private bool jump = false;
-    private int jumps= 0;
-    private bool isGrounded = true; 
-    public float moveForce = 150f;
-    public float maxSpeed = 5f;
-    public float jumpForce = 400f;
+    private bool isGrounded = true;
+    private bool isLaunchable = false;
     private float fireRate = 0.3f;
     private float nextFire = 0f;
     private bool facingRight = true;
-    public int health = 6;
     private int coinCount = 0;
-    public int enemiesKilled = 0;
     private float lastDamageTime = 0f;
+
+    public float moveForce = 150f;
+    public float maxSpeed = 5f;
+    public float jumpForce = 400f;
+    public int health = 6;
+    public int enemiesKilled = 0;
     
     void Start()
     {
         body = GetComponent<Rigidbody2D>();
         rend = GetComponent<SpriteRenderer>();
-        anim = GetComponent<Animator>(); 
+        anim = GetComponent<Animator>();
+
+        // Load & cache rock texture & tile
+        rockTile = ScriptableObject.CreateInstance<Tile>();
+        grottoTilesTexture = Resources.Load<Texture2D>("grotto-tiles");
     }
 
     void Update()
@@ -56,13 +66,18 @@ public class PlayerController : MonoBehaviour
 
         Debug.DrawRay(groundCheck.position, new Vector2(0, 0.2f), Color.red, 1f);
         RaycastHit2D grounded = Physics2D.Raycast(groundCheck.position, Vector2.down, 0.2f); //0.2f is distance
-
+        
         if (grounded.collider != null) {
             // Player has landed
             isGrounded = true;
-            anim.SetBool("IsJumping", false);  
+            anim.SetBool("IsJumping", false);
+
+            if (grounded.collider.CompareTag("Spikable")) {
+                isLaunchable = true;
+            }
         } else {
             isGrounded = false;
+            isLaunchable = false;
             anim.SetBool("IsJumping", true);
         }
 
@@ -72,18 +87,43 @@ public class PlayerController : MonoBehaviour
         else
             anim.SetBool("IsWalking", false);
 
-        if (Input.GetButtonDown("Jump")) {
-            if (jumps >= 2) {
-                if (isGrounded)
-                    jumps = 0;
-            } else {
-                jump = true;
-            }
+        if (Input.GetButtonDown("Jump") && isGrounded) {
+            jump = true;
+            Launch();
         }
         if (Input.GetButtonDown("Fire1") && Time.time > nextFire) {
             Instantiate(fire, firePosition);
             nextFire = Time.time + fireRate;
             gunshotSound.Play();
+        }
+    }
+
+    void Launch() {
+        StartCoroutine(erectPillar(
+            Mathf.RoundToInt(transform.position.x) - 1,
+            Mathf.RoundToInt(transform.position.x), 
+            Mathf.RoundToInt(transform.position.y) - 1
+        ));
+        Debug.Log("Launched");
+    }
+
+    IEnumerator erectPillar(int lx, int rx, int y) {
+        int blocks = 0;
+        while (blocks < 3) {
+            int blockHeight = 1;
+            while (blockHeight < 17) {
+                rockTile.sprite = Sprite.Create(grottoTilesTexture,
+                    new Rect(80, 32, 16, blockHeight),
+                    new Vector2(0.5f, 1/blockHeight),
+                16, 1);
+                pillarTilemap.SetTile(new Vector3Int(lx, y + blocks, 1), rockTile); // middle
+                pillarTilemap.SetTile(new Vector3Int(rx, y + blocks, 1), rockTile); // right
+                pillarTilemap.RefreshTile(new Vector3Int(lx, y + blocks, 1));
+                pillarTilemap.RefreshTile(new Vector3Int(rx, y + blocks, 1));
+                ++blockHeight;
+                yield return new WaitForSeconds(0.001f);
+            }
+            ++blocks;
         }
     }
 
@@ -100,7 +140,6 @@ public class PlayerController : MonoBehaviour
         if (jump) {
             body.AddForce(Vector2.up * jumpForce);
             jump = false;
-            ++jumps;
         }
         // make player fall faster
         if (body.velocity.y >= 0)
