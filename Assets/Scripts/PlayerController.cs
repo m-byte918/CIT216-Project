@@ -110,21 +110,25 @@ public class PlayerController : MonoBehaviour
     IEnumerator erectPillar(int lx, int rx, int y) {
         int blocks = 0;
         while (blocks < 3) {
+            // Pillar will be 3 blocks high
             int blockHeight = 1;
             while (blockHeight < 17) {
+                // Build a pillar 1 pixel at a time (probably a more efficient way to do this, but i dont have time lol)
                 rockTile.sprite = Sprite.Create(grottoTilesTexture,
                     new Rect(80, 32, 16, blockHeight),
                     new Vector2(0.5f, 1/blockHeight),
                 16, 1);
-                pillarTilemap.SetTile(new Vector3Int(lx, y + blocks, 1), rockTile); // middle
-                pillarTilemap.SetTile(new Vector3Int(rx, y + blocks, 1), rockTile); // right
+                pillarTilemap.SetTile(new Vector3Int(lx, y + blocks, 1), rockTile); // left side
+                pillarTilemap.SetTile(new Vector3Int(rx, y + blocks, 1), rockTile); // right side
                 pillarTilemap.RefreshTile(new Vector3Int(lx, y + blocks, 1));
                 pillarTilemap.RefreshTile(new Vector3Int(rx, y + blocks, 1));
                 ++blockHeight;
-                yield return new WaitForSeconds(0.001f);
+                yield return new WaitForSeconds(0.0001f);
             }
             ++blocks;
         }
+        // Rock pillars will give twice the force of a regular jump
+        body.AddForce(Vector2.up * jumpForce * 2);
     }
 
     void FixedUpdate()
