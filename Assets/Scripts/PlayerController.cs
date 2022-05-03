@@ -71,10 +71,7 @@ public class PlayerController : MonoBehaviour
             // Player has landed
             isGrounded = true;
             anim.SetBool("IsJumping", false);
-
-            if (grounded.collider.CompareTag("Spikable")) {
-                isLaunchable = true;
-            }
+            isLaunchable = grounded.collider.CompareTag("Spikable"); // Can only launch from regular ground
         } else {
             isGrounded = false;
             isLaunchable = false;
@@ -87,9 +84,13 @@ public class PlayerController : MonoBehaviour
         else
             anim.SetBool("IsWalking", false);
 
-        if (Input.GetButtonDown("Jump") && isGrounded) {
-            jump = true;
-            Launch();
+        if (Input.GetButtonDown("Jump")) {
+            if (Input.GetKey(KeyCode.LeftShift) && isLaunchable) {
+                // Must hold down shift and press jump key to make pillar
+                Launch();
+            } else if (isGrounded) {
+                jump = true;
+            }
         }
         if (Input.GetButtonDown("Fire1") && Time.time > nextFire) {
             Instantiate(fire, firePosition);
@@ -104,7 +105,6 @@ public class PlayerController : MonoBehaviour
             Mathf.RoundToInt(transform.position.x), 
             Mathf.RoundToInt(transform.position.y) - 1
         ));
-        Debug.Log("Launched");
     }
 
     IEnumerator erectPillar(int lx, int rx, int y) {
