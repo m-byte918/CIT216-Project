@@ -483,8 +483,10 @@ MonoBehaviour:
 
     Space, Up - Jump
 
-    Left click
-    - Shoot'
+    Shift+Jump
+    - Create rock pillar
+
+    Left click - Shoot'
 --- !u!222 &516841900
 CanvasRenderer:
   m_ObjectHideFlags: 0
