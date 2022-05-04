@@ -182,7 +182,7 @@ public class PlayerController : MonoBehaviour
     }
 
     public void checkEndGame() {
-        if (coinCount < 15 || enemiesKilled < 10)
+        if (coinCount < 10 || enemiesKilled < 7)
             return;
         youWonImg.SetActive(true);
         pauseGameAndPlayer();
