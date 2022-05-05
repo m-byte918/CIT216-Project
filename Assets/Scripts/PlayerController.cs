@@ -1,4 +1,11 @@
-﻿using System.Collections;
+﻿/*
+ * Christian Rodriguez
+ * May 5 2022
+ * 
+ * Updates player movement and controls, and keeps track of the player state
+ */
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -93,12 +100,16 @@ public class PlayerController : MonoBehaviour
             }
         }
         if (Input.GetButtonDown("Fire1") && Time.time > nextFire) {
+            // Create "bullet" at nextFire interval
             Instantiate(fire, firePosition);
             nextFire = Time.time + fireRate;
             gunshotSound.Play();
         }
     }
 
+    /*
+     * Starts the erectPillar coroutine
+     */
     void Launch() {
         StartCoroutine(erectPillar(
             Mathf.RoundToInt(transform.position.x) - 1,
@@ -107,6 +118,9 @@ public class PlayerController : MonoBehaviour
         ));
     }
 
+    /*
+     * Erects a pillar from the ground
+     */
     IEnumerator erectPillar(int lx, int rx, int y) {
         int blocks = 0;
         while (blocks < 3) {
@@ -142,6 +156,7 @@ public class PlayerController : MonoBehaviour
             body.velocity = new Vector2(Mathf.Sign(body.velocity.x) * maxSpeed, body.velocity.y);
 
         if (jump) {
+            // Force the player into the air
             body.AddForce(Vector2.up * jumpForce);
             jump = false;
         }
@@ -165,22 +180,30 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision) {
         if (collision.gameObject.CompareTag("Enemy")) {
+            // Take damage if touches enemy
             takeDamage(1);
         }
     }
 
     private void OnCollisionStay2D(Collision2D collision) {
         if (collision.gameObject.CompareTag("Enemy")) {
+            // Take damage if continuously touching enemy
             takeDamage(1);
         }
     }
 
+    /*
+     * Pauses the game and suspends the player's physics
+     */
     private void pauseGameAndPlayer() {
         body.gravityScale *= 0;
         body.velocity = Vector2.zero;
         GameManager.togglePaused();
     }
 
+    /*
+     * Ends the game if the winning conditions are met
+     */
     public void checkEndGame() {
         if (coinCount < 10 || enemiesKilled < 7)
             return;
@@ -188,11 +211,15 @@ public class PlayerController : MonoBehaviour
         pauseGameAndPlayer();
     }
 
+    /*
+     * Subtracts the provided amount of damage from the player's health
+     */
     public void takeDamage(int damage) {
         if (Time.time - lastDamageTime < 1f)
             return;
         health -= damage;
         if (health <= 0) {
+            // End the game
             youDiedImg.SetActive(true);
             pauseGameAndPlayer();
             healthBar.texture = healthBarTextures[0];
@@ -202,6 +229,9 @@ public class PlayerController : MonoBehaviour
         lastDamageTime = Time.time;
     }
 
+    /*
+     * Flips the player from left-to-right or right-to-left
+     */
     private void flip() {
         facingRight = !facingRight;
         Vector3 theScale = transform.localScale;
@@ -209,6 +239,9 @@ public class PlayerController : MonoBehaviour
         transform.localScale = theScale;
     }
 
+    /*
+     * Gets the direction the player is facing
+     */
     public Vector3 getDirection() {
         return facingRight ? Vector3.right : Vector3.left;
     }

@@ -1,4 +1,11 @@
-﻿using System.Collections;
+﻿/*
+ * Christian Rodriguez
+ * May 5 2022
+ * 
+ * Controls 'bullet' behavior
+ */
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,6 +18,7 @@ public class FireController : MonoBehaviour {
 
     // Start is called before the first frame update
     void Start() {
+        // Cache
         body = GetComponent<Rigidbody2D>();
         GameObject p = GameObject.FindGameObjectWithTag("Player");
         player = p.GetComponent<PlayerController>();
@@ -23,6 +31,9 @@ public class FireController : MonoBehaviour {
         transform.position = Vector3.Lerp(transform.position, transform.position + direction, speed * Time.deltaTime);
     }
 
+    /*
+     * Destroys the bullet
+     */
     void shinda() {
         if (gameObject != null)
             Destroy(gameObject);
